@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import FastAPI, Path, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
@@ -19,7 +19,7 @@ class Game(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": 1,
-                "nombre": "Nombre del juego",
+                "name": "Nombre del juego",
                 "description": "El juego trata de:",
                 "realease_year": 2023,
                 "developer": "Quien creo el juego",
@@ -53,32 +53,33 @@ def main():
     return HTMLResponse("<h1>Hello World</h1>")
 
 
-@app.get("/games", tags=["games"])
-def get_games():
-    return video_games
+@app.get("/games", tags=["games"], response_model=List[Game])
+def get_games() -> List[Game]:
+    return JSONResponse(content=video_games)
 
 
-@app.get("/games/{id}", tags=["games"])
-def get_game(id: int = Path(ge=1)):
+@app.get("/games/{id}", tags=["games"], response_model=Game)
+def get_game(id: int = Path(ge=1)) -> Game:
     for game in video_games:
         if game["id"] == id:
-            return game
-    return []
+            return JSONResponse(content=game)
+    return JSONResponse(content=[])
 
 
-@app.get("/games/", tags=["games"])
-def get_game_by_genre(genre: str = Query(max_length=16)):
-    return [game for game in video_games if game["genre"] == genre]
+@app.get("/games/", tags=["games"], response_model=List[Game])
+def get_game_by_genre(genre: str = Query(max_length=16)) -> List[Game]:
+    res = [game for game in video_games if game["genre"] == genre]
+    return JSONResponse(content=res)
 
 
-@app.post("/games", tags=["games"])
-def create_game(game: Game):
+@app.post("/games", tags=["games"], response_model=dict)
+def create_game(game: Game) -> dict:
     video_games.append(game.model_dump())
-    return game
+    return JSONResponse(content={"message": "New video game saved"})
 
 
-@app.put("/games/{id}", tags=["games"])
-def update_game(id: int, game: Game):
+@app.put("/games/{id}", tags=["games"], response_model=dict)
+def update_game(id: int, game: Game) -> dict:
     for item in video_games:
         if item["id"] == id:
             item["name"] = game.name
@@ -86,12 +87,13 @@ def update_game(id: int, game: Game):
             item["realease_year"] = game.realease_year
             item["developer"] = game.developer
             item["genre"] = game.genre
+            return JSONResponse(content={"message": "Game updated"})
 
 
-@app.delete("/games/{id}", tags=["games"])
-def delete_game(id: int):
+@app.delete("/games/{id}", tags=["games"], response_model=dict)
+def delete_game(id: int) -> dict:
     for game in video_games:
         if game["id"] == id:
             video_games.remove(game)
             break
-    return video_games
+    return JSONResponse(content={"message": "Video game deleted"})
