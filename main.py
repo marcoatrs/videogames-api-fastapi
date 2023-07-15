@@ -10,7 +10,14 @@ video_games = [
         "description": "Tactical JRPG",
         "realease_year": 2003,
         "developer": "Nippon Ichi Software",
-    }
+    },
+    {
+        "id": 2,
+        "name": "Disgaea",
+        "description": "Tactical JRPG",
+        "realease_year": 2003,
+        "developer": "Nippon Ichi Software",
+    },
 ]
 
 
@@ -22,3 +29,11 @@ def main():
 @app.get("/games", tags=["games"])
 def get_games():
     return video_games
+
+
+@app.get('/games/{id}', tags=["games"])
+def get_game(id: int):
+    for game in video_games:
+        if game['id'] == id:
+            return game
+    return []
