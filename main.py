@@ -2,18 +2,30 @@ from typing import Optional
 
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
 
 
 class Game(BaseModel):
     id: Optional[int] = None
-    name: str
-    description: str
-    realease_year: int
-    developer: str
-    genre: str
+    name: str = Field(max_length=20)
+    description: str = Field(min_length=5)
+    realease_year: int = Field(le=2023)
+    developer: str = Field(max_length=30)
+    genre: str = Field(max_length=16)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "nombre": "Nombre del juego",
+                "description": "El juego trata de:",
+                "realease_year": 2023,
+                "developer": "Quien creo el juego",
+                "genre": "Es un juego de:",
+            }
+        }
 
 
 video_games = [
