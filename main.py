@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Path, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -16,7 +16,7 @@ class Game(BaseModel):
     genre: str = Field(max_length=16)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "nombre": "Nombre del juego",
@@ -59,7 +59,7 @@ def get_games():
 
 
 @app.get("/games/{id}", tags=["games"])
-def get_game(id: int):
+def get_game(id: int = Path(ge=1)):
     for game in video_games:
         if game["id"] == id:
             return game
@@ -67,7 +67,7 @@ def get_game(id: int):
 
 
 @app.get("/games/", tags=["games"])
-def get_game_by_genre(genre: str):
+def get_game_by_genre(genre: str = Query(max_length=16)):
     return [game for game in video_games if game["genre"] == genre]
 
 
