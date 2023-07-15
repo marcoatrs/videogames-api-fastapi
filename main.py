@@ -64,3 +64,25 @@ def create_game(
         "genre": genre,
     }
     video_games.append(game)
+
+
+@app.put("/games/{id}", tags=["games"])
+def update_game(
+    id: int, name: str, description: str, realease_year: int, developer: str, genre: str
+):
+    for game in video_games:
+        if game["id"] == id:
+            game["name"] = name
+            game["description"] = description
+            game["realease_year"] = realease_year
+            game["developer"] = developer
+            game["genre"] = genre
+
+
+@app.delete('/games/{id}', tags=['games'])
+def delete_game(id: int):
+    for game in video_games:
+        if game["id"] == id:
+            video_games.remove(game)
+            break
+    return video_games
