@@ -4,7 +4,14 @@ from fastapi import FastAPI, Path, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+from jwt_manager import create_token
+
 app = FastAPI(title="App con FastAPI", version="0.0.1")
+
+
+class User(BaseModel):
+    email: str
+    password: str
 
 
 class Game(BaseModel):
@@ -51,6 +58,13 @@ video_games = [
 @app.get("/", tags=["home"])
 def main():
     return HTMLResponse("<h1>Hello World</h1>")
+
+
+@app.post("/login", tags=["auth"])
+def login(user: User):
+    if user.email == "admin@email.com" and user.password == "admin":
+        token: str = create_token(user.model_dump())
+        return JSONResponse(content=token, status_code=200)
 
 
 @app.get("/games", tags=["games"], response_model=List[Game], status_code=200)
