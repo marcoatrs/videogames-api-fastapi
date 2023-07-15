@@ -1,7 +1,20 @@
+from typing import Optional
+
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
+
+
+class Game(BaseModel):
+    id: Optional[int] = None
+    name: str
+    description: str
+    realease_year: int
+    developer: str
+    genre: str
+
 
 video_games = [
     {
@@ -47,39 +60,23 @@ def get_game_by_genre(genre: str):
 
 
 @app.post("/games", tags=["games"])
-def create_game(
-    id: int = Body(),
-    name: str = Body(),
-    description: str = Body(),
-    realease_year: int = Body(),
-    developer: str = Body(),
-    genre: str = Body(),
-):
-    game = {
-        "id": id,
-        "name": name,
-        "description": description,
-        "realease_year": realease_year,
-        "developer": developer,
-        "genre": genre,
-    }
-    video_games.append(game)
+def create_game(game: Game):
+    video_games.append(game.model_dump())
+    return game
 
 
 @app.put("/games/{id}", tags=["games"])
-def update_game(
-    id: int, name: str, description: str, realease_year: int, developer: str, genre: str
-):
-    for game in video_games:
-        if game["id"] == id:
-            game["name"] = name
-            game["description"] = description
-            game["realease_year"] = realease_year
-            game["developer"] = developer
-            game["genre"] = genre
+def update_game(id: int, game: Game):
+    for item in video_games:
+        if item["id"] == id:
+            item["name"] = game.name
+            item["description"] = game.description
+            item["realease_year"] = game.realease_year
+            item["developer"] = game.developer
+            item["genre"] = game.genre
 
 
-@app.delete('/games/{id}', tags=['games'])
+@app.delete("/games/{id}", tags=["games"])
 def delete_game(id: int):
     for game in video_games:
         if game["id"] == id:
