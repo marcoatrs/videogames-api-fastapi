@@ -10,6 +10,7 @@ video_games = [
         "description": "Tactical JRPG",
         "realease_year": 2003,
         "developer": "Nippon Ichi Software",
+        "genre": "jrpg",
     },
     {
         "id": 2,
@@ -17,6 +18,7 @@ video_games = [
         "description": "Tactical JRPG",
         "realease_year": 2003,
         "developer": "Nippon Ichi Software",
+        "genre": "tactis",
     },
 ]
 
@@ -31,9 +33,14 @@ def get_games():
     return video_games
 
 
-@app.get('/games/{id}', tags=["games"])
+@app.get("/games/{id}", tags=["games"])
 def get_game(id: int):
     for game in video_games:
-        if game['id'] == id:
+        if game["id"] == id:
             return game
     return []
+
+
+@app.get("/games/", tags=["games"])
+def get_game_by_genre(genre: str):
+    return [game for game in video_games if game["genre"] == genre]
