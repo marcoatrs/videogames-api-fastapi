@@ -1,13 +1,16 @@
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 from config.database import Base, Session, engine
+from db import add
 from jwt_manager import create_token, validate_token
-from db import odd
+from models.game import Game as GameModel
+from models.game import Genre
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
 Base.metadata.create_all(bind=engine)
@@ -90,28 +93,37 @@ def login(user: User):
     status_code=200,
     dependencies=[Depends(JWTBearer())],
 )
-def get_games() -> List[Game]:
-    return JSONResponse(content=video_games, status_code=200)
+def get_games():
+    db = Session()
+    res = db.query(GameModel).all()
+    return JSONResponse(content=jsonable_encoder(res), status_code=200)
 
 
 @app.get("/games/{id}", tags=["games"], response_model=Game)
 def get_game(id: int = Path(ge=1)) -> Game:
-    for game in video_games:
-        if game["id"] == id:
-            return JSONResponse(content=game)
-    return JSONResponse(content=[], status_code=404)
+    db = Session()
+    res = db.query(GameModel).filter(GameModel.id == id).one_or_none()
+    if res is None:
+        return JSONResponse(status_code=404, content={"message": "game not found"})
+    return JSONResponse(content=jsonable_encoder(res), status_code=200)
 
 
 @app.get("/games/", tags=["games"], response_model=List[Game])
 def get_game_by_genre(genre: str = Query(max_length=16)) -> List[Game]:
-    res = [game for game in video_games if game["genre"] == genre]
-    return JSONResponse(content=res)
+    db = Session()
+    genre_id = db.query(Genre.id).filter(Genre.name == genre).one_or_none()
+    if genre_id is None:
+        return JSONResponse(content={"message": "Genre not exists"}, status_code=404)
+    res = db.query(GameModel).filter(GameModel.genre == genre_id[0]).all()
+    if not res:
+        return JSONResponse(content={"message": "0 games"}, status_code=404)
+    return JSONResponse(content=jsonable_encoder(res), status_code=200)
 
 
 @app.post("/games", tags=["games"], response_model=dict, status_code=201)
 def create_game(game: Game) -> dict:
     db = Session()
-    odd.create_video_game(db, game)
+    add.create_video_game(db, game)
     return JSONResponse(content={"message": "New video game saved"}, status_code=201)
 
 
