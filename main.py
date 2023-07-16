@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from config.database import Base, Session, engine
 from jwt_manager import create_token, validate_token
-from models.game import Game
+from db import odd
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
 Base.metadata.create_all(bind=engine)
@@ -29,8 +29,9 @@ class User(BaseModel):
 class Game(BaseModel):
     id: Optional[int] = None
     name: str = Field(max_length=20)
-    description: str = Field(min_length=5)
+    about: str = Field(min_length=5)
     realease_year: int = Field(le=2023)
+    platform: str = Field(max_length=50)
     developer: str = Field(max_length=30)
     genre: str = Field(max_length=16)
 
@@ -39,8 +40,9 @@ class Game(BaseModel):
             "example": {
                 "id": 1,
                 "name": "Nombre del juego",
-                "description": "El juego trata de:",
+                "about": "El juego trata de:",
                 "realease_year": 2023,
+                "platform": "Plataforma",
                 "developer": "Quien creo el juego",
                 "genre": "Es un juego de:",
             }
@@ -51,16 +53,18 @@ video_games = [
     {
         "id": 1,
         "name": "Disgaea",
-        "description": "Tactical JRPG",
+        "about": "Tactical JRPG",
         "realease_year": 2003,
+        "platform": "pc",
         "developer": "Nippon Ichi Software",
         "genre": "jrpg",
     },
     {
         "id": 2,
         "name": "Disgaea",
-        "description": "Tactical JRPG",
+        "about": "Tactical JRPG",
         "realease_year": 2003,
+        "platform": "switch",
         "developer": "Nippon Ichi Software",
         "genre": "tactis",
     },
@@ -106,7 +110,8 @@ def get_game_by_genre(genre: str = Query(max_length=16)) -> List[Game]:
 
 @app.post("/games", tags=["games"], response_model=dict, status_code=201)
 def create_game(game: Game) -> dict:
-    video_games.append(game.model_dump())
+    db = Session()
+    odd.create_video_game(db, game)
     return JSONResponse(content={"message": "New video game saved"}, status_code=201)
 
 
@@ -115,7 +120,7 @@ def update_game(id: int, game: Game) -> dict:
     for item in video_games:
         if item["id"] == id:
             item["name"] = game.name
-            item["description"] = game.description
+            item["about"] = game.description
             item["realease_year"] = game.realease_year
             item["developer"] = game.developer
             item["genre"] = game.genre
