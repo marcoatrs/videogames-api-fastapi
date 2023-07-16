@@ -52,28 +52,6 @@ class Game(BaseModel):
         }
 
 
-video_games = [
-    {
-        "id": 1,
-        "name": "Disgaea",
-        "about": "Tactical JRPG",
-        "realease_year": 2003,
-        "platform": "pc",
-        "developer": "Nippon Ichi Software",
-        "genre": "jrpg",
-    },
-    {
-        "id": 2,
-        "name": "Disgaea",
-        "about": "Tactical JRPG",
-        "realease_year": 2003,
-        "platform": "switch",
-        "developer": "Nippon Ichi Software",
-        "genre": "tactis",
-    },
-]
-
-
 @app.get("/", tags=["home"])
 def main():
     return HTMLResponse("<h1>Hello World</h1>")
@@ -129,20 +107,26 @@ def create_game(game: Game) -> dict:
 
 @app.put("/games/{id}", tags=["games"], response_model=dict, status_code=200)
 def update_game(id: int, game: Game) -> dict:
-    for item in video_games:
-        if item["id"] == id:
-            item["name"] = game.name
-            item["about"] = game.description
-            item["realease_year"] = game.realease_year
-            item["developer"] = game.developer
-            item["genre"] = game.genre
-            return JSONResponse(content={"message": "Game updated"}, status_code=200)
+    db = Session()
+    res = db.query(GameModel).filter(GameModel.id == id).first()
+    if res is None:
+        return JSONResponse(content={"message": "Game not found"}, status_code=404)
+    res.name = game.name
+    res.about = game.about
+    res.realease_year = game.realease_year
+    res.platform = add.get_platform(db, game)
+    res.developer = add.get_developer(db, game)
+    res.genre = add.get_genre(db, game)
+    db.commit()
+    return JSONResponse(content={"message": "Game updated"}, status_code=200)
 
 
 @app.delete("/games/{id}", tags=["games"], response_model=dict, status_code=200)
 def delete_game(id: int) -> dict:
-    for game in video_games:
-        if game["id"] == id:
-            video_games.remove(game)
-            break
+    db = Session()
+    res = db.query(GameModel).filter(GameModel.id == id).first()
+    if res is None:
+        return JSONResponse(content={"message": "Game not found"}, status_code=404)
+    db.delete(res)
+    db.commit()
     return JSONResponse(content={"message": "Video game deleted"}, status_code=200)
