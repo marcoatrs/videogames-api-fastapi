@@ -1,27 +1,21 @@
 from typing import List, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request
+from fastapi import Depends, FastAPI, Path, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 from config.database import Base, Session, engine
 from db import add
-from jwt_manager import create_token, validate_token
+from jwt_manager import create_token
+from middlewares.error_handler import ErrorHandler
+from middlewares.jwt_bearer import JWTBearer
 from models.game import Game as GameModel
 from models.game import Genre
 
 app = FastAPI(title="App con FastAPI", version="0.0.1")
+app.add_middleware(ErrorHandler)
 Base.metadata.create_all(bind=engine)
-
-
-class JWTBearer(HTTPBearer):
-    async def __call__(self, request: Request):
-        auth = await super().__call__(request)
-        data = validate_token(auth.credentials)
-        if data["email"] != "admin@email.com":
-            raise HTTPException(status_code=403, detail="Credenciales invalidas")
 
 
 class User(BaseModel):
