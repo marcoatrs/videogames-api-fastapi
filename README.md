@@ -17,7 +17,7 @@ pip install -r requirements.txt
 ## Run App
 
 ```bash
-uvicorn main:app --port 8000t
+uvicorn main:app --port 8000
 ```
 
 ## Documentation
