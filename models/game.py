@@ -1,7 +1,7 @@
 from typing import List
 
 from sqlalchemy import Column, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from config.database import Base
 
@@ -36,7 +36,3 @@ class Game(Base):
     developer: Mapped[int] = mapped_column(ForeignKey("developers.id"))
     realease_year = Column(Integer)
     about = Column(Text)
-
-    platform_id = relationship("Platform", backref=backref("games", cascade="all, delete-orphan"))
-    genre_id = relationship("Genre", backref=backref("games", cascade="all, delete-orphan"))
-    developer_id = relationship("Developer", backref=backref("games", cascade="all, delete-orphan"))

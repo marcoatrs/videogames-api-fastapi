@@ -1,12 +1,12 @@
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from models.game import Developer
 from models.game import Game as GameModel
 from models.game import Genre, Platform
+from schemas.game import GameSchema
 
 
-def get_platform(db: Session, game: GameModel) -> int:
+def get_platform(db: Session, game: GameSchema) -> int:
     platform_id: int = (
         db.query(Platform.id).filter(Platform.name == game.platform).one_or_none()
     )
@@ -18,7 +18,7 @@ def get_platform(db: Session, game: GameModel) -> int:
     return platform_id[0]
 
 
-def get_genre(db: Session, game: GameModel) -> int:
+def get_genre(db: Session, game: GameSchema) -> int:
     genre_id: int = db.query(Genre.id).filter(Genre.name == game.genre).one_or_none()
     if genre_id is None:
         new_genre = Genre(name=game.genre)
@@ -28,7 +28,7 @@ def get_genre(db: Session, game: GameModel) -> int:
     return genre_id[0]
 
 
-def get_developer(db: Session, game: GameModel) -> int:
+def get_developer(db: Session, game: GameSchema) -> int:
     developer_id: int = (
         db.query(Developer.id).filter(Developer.name == game.developer).one_or_none()
     )
@@ -40,7 +40,7 @@ def get_developer(db: Session, game: GameModel) -> int:
     return developer_id[0]
 
 
-def create_video_game(db: Session, game: BaseModel):
+def create_video_game(db: Session, game: GameSchema):
     # Platform
     platform_id = get_platform(db, game)
 
